@@ -1,0 +1,31 @@
+<launch>
+
+  <node pkg="terrain_analysis" type="terrainAnalysis" name="terrainAnalysis" output="screen" required="true">
+    <param name="scanVoxelSize" type="double" value="0.05" />   <!-- 点云下采样 -->
+    <param name="decayTime" type="double" value="2.0" />        <!-- 点云时间差阈值 大于则不会被处理	 -->
+    <param name="noDecayDis" type="double" value="4.0" />       <!-- 以第一一帧原点建立坐标系，第二帧坐标到原点的距离，两帧距离差，小于该阈值不考虑时间差	 -->
+    <param name="clearingDis" type="double" value="8.0" />      <!-- 该距离外的点会被清除 -->
+    <param name="useSorting" type="bool" value="false" />       <!-- 清除距离外的点云 -->
+    <param name="quantileZ" type="double" value="0.25" />       <!-- 考虑地面附近高程最小值会改变 -->
+    <param name="considerDrop" type="bool" value="true" />      <!-- 是否考虑地面下降 -->
+    <param name="limitGroundLift" type="bool" value="false" />  <!-- 控制是否限制地面高程的最大上升值 -->
+    <param name="maxGroundLift" type="double" value="0.15" />   <!-- 最大允许地面上升高度 -->
+    <param name="clearDyObs" type="bool" value="true" />        <!-- 是否清除动态障碍物 true-->
+    <param name="minDyObsDis" type="double" value="0.8" />      <!-- 动态障碍物检测参数0.3,值越高动态障碍物去除越强 -->
+    <param name="minDyObsAngle" type="double" value="0" />      
+    <param name="minDyObsRelZ" type="double" value="-0.5" />
+    <param name="minDyObsVFOV" type="double" value="-16.0" />
+    <param name="maxDyObsVFOV" type="double" value="16.0" />
+    <param name="minDyObsPointNum" type="int" value="1" />
+    <param name="noDataObstacle" type="bool" value="false" />
+    <param name="noDataBlockSkipNum" type="int" value="0" />
+    <param name="minBlockPointNum" type="int" value="10" />       <!-- 计算有效高程的最小点云数量 -->
+    <param name="vehicleHeight" type="double" value="1.5" />      <!-- 车体高度1.5，影响的是我们考虑的地形的高度范围,越小分析越低，有阈值-->
+    <param name="voxelPointUpdateThre" type="int" value="100" />  <!-- 需要处理的体素网格点云数量最小值 -->
+    <param name="voxelTimeUpdateThre" type="double" value="2.0" />
+    <param name="minRelZ" type="double" value="-2.5" />           <!-- 点云处理的最小高度 以小车自身为坐标系下的相对高度，他是根据距离动态阈值计算-->
+    <param name="maxRelZ" type="double" value="1.0" />            <!-- 点云处理的最大高度 以小车自身为坐标系下的相对高度-->
+    <param name="disRatioZ" type="double" value="0.2" />            <!-- dis * disRatioZ 乘点云距离的一个比例值-->
+  </node>
+
+</launch>

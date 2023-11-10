@@ -1,0 +1,114 @@
+//--------------------------------------------------------local_planner--------------------------------------------------------------
+<arg name="sensorOffsetX" default="0.0"/>   <!-- 传感器坐标系与车体中心的偏移量 -->
+  <arg name="sensorOffsetY" default="0"/>   <!-- 传感器坐标系与车体中心的偏移量 -->
+  <arg name="cameraOffsetZ" default="0"/> 
+  <arg name="twoWayDrive" default="true"/>  <!-- 双向驱动：就是车体能不能反向走（倒车） -->
+  <arg name="maxSpeed" default="2.0"/>      <!-- X、Y轴的最大速度 -->
+  <arg name="autonomyMode" default="true"/> <!-- 自主模式：跟手柄有关 -->
+  <arg name="autonomySpeed" default="2.0"/>   <!-- 自动探索最大速度 -->
+  <arg name="joyToSpeedDelay" default="2.0"/>   
+  <arg name="goalX" default="0"/> <!-- 局部路径目标点 -->
+  <arg name="goalY" default="0"/> <!-- 局部路径目标点 -->
+
+  <node pkg="local_planner" type="localPlanner" name="localPlanner" output="screen" required="true">
+    <param name="pathFolder" type="string" value="$(find local_planner)/paths" />
+    <param name="vehicleLength" type="double" value="0.6" />      <!-- 车长 单位m-->
+    <param name="vehicleWidth" type="double" value="0.6" />       <!-- 车宽 单位m-->
+    <param name="sensorOffsetX" value="$(arg sensorOffsetX)" /> 
+    <param name="sensorOffsetY" value="$(arg sensorOffsetY)" />
+    <param name="twoWayDrive" value="$(arg twoWayDrive)" />
+    <param name="laserVoxelSize" type="double" value="0.05" />  <!-- 下采样体素栅格叶大小 -->
+    <param name="terrainVoxelSize" type="double" value="0.2" /> <!-- 下采样体素栅格叶大小 -->
+    <param name="useTerrainAnalysis" type="bool" value="true" />  <!--  在室内结构化平坦场地时不使用地形分析的点云使用slam配准后的scan_registered也可以，不过最好使用地形分析的-->
+    <param name="checkObstacle" type="bool" value="true" />
+    <param name="checkRotObstacle" type="bool" value="false" />
+    <param name="adjacentRange" type="double" value="3.25" />       <!-- 最大速度对应的避障范围，实际的避障范围是和实际速度成线性关系的，速度越慢，避障范围越小，同时会有一个最小避障范围。minRelZ以及maxRelZ限制了有效点的Z值范围，可以查看代码，Z值的最大最小范围由这两个值决定，但是并不等于这两个值，是有一个比例关系的，距离机器人越远，限定范围就越大，这其中考虑了坡度 -->
+    <param name="obstacleHeightThre" type="double" value="0.15" />  <!-- 0.15障碍物高度阈值，高于这个值就会被认定成障碍物，否则坡度合适的情况下会认定为斜坡，不会影响far边界的建立,但会影响他局部路径（黄色扇形） -->
+    <param name="groundHeightThre" type="double" value="0.1" />     <!-- 地面高度阈值，设置太小会导致原地旋转 -->
+    <param name="costHeightThre" type="double" value="0.1" />       <!-- 计算路径惩罚得分的权重 -->
+    <param name="costScore" type="double" value="0.02" />           <!-- 最小惩罚得分 -->
+    <param name="useCost" type="bool" value="false" />
+    <param name="pointPerPathThre" type="int" value="2" />
+    <param name="minRelZ" type="double" value="-0.5" />             <!-- minRelZ以及maxRelZ限制了有效点的Z值范围 -->
+    <param name="maxRelZ" type="double" value="0.25" />             <!--  -->
+    <param name="maxSpeed" value="$(arg maxSpeed)" />
+    <param name="dirWeight" type="double" value="0.02" />           <!-- 计算得分时转向角度的权重 -->
+    <param name="dirThre" type="double" value="90.0" />             <!-- 最大转向角度 -->
+    <param name="dirToVehicle" type="bool" value="false" />         <!-- dirToVehicle这个参数是为一些类似汽车的机器人平台设置的，这些平台不能原地转向而只能一边向前或者向后运动一边转向。当这个参数设置成false的时候，就是应用在大多数可以差速驱动的机器人平台上，只考虑目标方向附近的轨迹，机器人可以任意无碰撞的转向需要的方向。而当这个参数设置成true的时候，就是应用在上述类似汽车的平台上，这时候只考虑机器人朝向dirThr之内的轨迹，因为机器人只能向前或者向后运动的时候转向，dirThr之外的轨迹机器人是没有能力实现的。一般dirToVehicle是true的时候，dirThr会设置的比较小，比如只考虑机器人朝前或者朝后10°的范围内的轨迹。如果用的是差速驱动的机器人，那就可以保持现在的v默认设置。 -->
+    <param name="pathScale" type="double" value="1.25" />           <!-- 路径尺度 -->
+    <param name="minPathScale" type="double" value="0.75" />        <!-- 最小路径尺度 -->
+    <param name="pathScaleStep" type="double" value="0.25" />       <!-- 路径尺度的调整步长 -->
+    <param name="pathScaleBySpeed" type="bool" value="true" />      <!-- 是否根据速度调整路径尺度 -->
+    <param name="minPathRange" type="double" value="1.0" />         <!-- 最小路径距离 -->
+    <param name="pathRangeStep" type="double" value="0.5" />        <!-- 路径范围的调整步长 -->
+    <param name="pathRangeBySpeed" type="bool" value="true" />      <!-- 是否根据速度调整路径的范围 -->
+    <param name="pathCropByGoal" type="bool" value="true" />        <!-- 是否根据目标点+ goalClearRange 筛选点云数据 -->
+    <param name="autonomyMode" value="$(arg autonomyMode)" />
+    <param name="autonomySpeed" value="$(arg autonomySpeed)" />
+    <param name="joyToSpeedDelay" value="$(arg joyToSpeedDelay)" />
+    <param name="joyToCheckObstacleDelay" type="double" value="5.0" />
+    <param name="goalClearRange" type="double" value="0.5" />       <!-- 当 pathCropByGoal = true 时,点云距离超过目标点+该值则不被处理 -->
+    <param name="goalX" type="double" value="$(arg goalX)" />
+    <param name="goalY" type="double" value="$(arg goalY)" />
+  </node>
+//-----------------------------------------------------------------------------------------------------------------------------------------
+  
+  
+  
+  
+  
+  
+  
+  //------------------------------------------------terrain_analysis--------------------------------------------------------------------
+  <launch>
+
+  <node pkg="terrain_analysis" type="terrainAnalysis" name="terrainAnalysis" output="screen" required="true">
+    <param name="scanVoxelSize" type="double" value="0.05" />   <!-- 点云下采样 -->
+    <param name="decayTime" type="double" value="2.0" />        <!-- 点云时间差阈值 大于则不会被处理	 -->
+    <param name="noDecayDis" type="double" value="4.0" />       <!-- 以第一一帧原点建立坐标系，第二帧坐标到原点的距离，两帧距离差，小于该阈值不考虑时间差	 -->
+    <param name="clearingDis" type="double" value="8.0" />      <!-- 该距离外的点会被清除 -->
+    <param name="useSorting" type="bool" value="false" />       <!-- 清除距离外的点云 -->
+    <param name="quantileZ" type="double" value="0.25" />       <!-- 考虑地面附近高程最小值会改变 -->
+    <param name="considerDrop" type="bool" value="true" />      <!-- 是否考虑地面下降 -->
+    <param name="limitGroundLift" type="bool" value="false" />  <!-- 控制是否限制地面高程的最大上升值 -->
+    <param name="maxGroundLift" type="double" value="0.15" />   <!-- 最大允许地面上升高度 -->
+    <param name="clearDyObs" type="bool" value="true" />        <!-- 是否清除动态障碍物 true-->
+    <param name="minDyObsDis" type="double" value="0.3" />      <!-- 动态障碍物检测参数 -->
+    <param name="minDyObsAngle" type="double" value="0" />      
+    <param name="minDyObsRelZ" type="double" value="-0.5" />
+    <param name="minDyObsVFOV" type="double" value="-16.0" />
+    <param name="maxDyObsVFOV" type="double" value="16.0" />
+    <param name="minDyObsPointNum" type="int" value="1" />
+    <param name="noDataObstacle" type="bool" value="false" />
+    <param name="noDataBlockSkipNum" type="int" value="0" />
+    <param name="minBlockPointNum" type="int" value="10" />       <!-- 计算有效高程的最小点云数量 -->
+    <param name="vehicleHeight" type="double" value="0.5" />      <!-- 车体高度0.5 对于边界建立影响不大-->
+    <param name="voxelPointUpdateThre" type="int" value="100" />  <!-- 需要处理的体素网格点云数量最小值 -->
+    <param name="voxelTimeUpdateThre" type="double" value="2.0" />
+    <param name="minRelZ" type="double" value="-2.5" />           <!-- 点云处理的最小高度 以小车自身为坐标系下的相对高度，他是根据距离动态阈值计算-->
+    <param name="maxRelZ" type="double" value="1.0" />            <!-- 点云处理的最大高度 以小车自身为坐标系下的相对高度-->
+    <param name="disRatioZ" type="double" value="0.2" />            <!-- dis * disRatioZ 乘点云距离的一个比例值-->
+  </node>
+
+</launch>
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+//----------------------------------------------------far_planner------------------------------------------------------------------
+# Dynamic Planner Default Params
+main_run_freq                           : 2.5   #动态规划运行频率
+voxel_dim                               : 0.1  # Unit: meter 0.15  体素大小,用于点云下采样 值越小边界就越精细
+robot_dim                               : 0.4   # Unit: meter 机器人尺寸 0.8  对于边界有影响，感觉这个值是反着来的
+vehicle_height                          : 0.75  # Unit: meter 雷达安装高度 0.75 越小，就只建周围的边界，远边界不建立
+sensor_range                            : 30.0  # Unit: meter 传感器有效范围
+terrain_range                           : 15.0  # Unit: meter 地形分析范围
+local_planner_range                     : 5.0   # Unit: meter 局部路径规划范围
+visualize_ratio                         : 0.75
+is_viewpoint_extend                     : true  #（默认值：true）设置为 false 以停止将可见性图形顶点从对象扩展到远离对象以获得更好的视点。
+is_multi_layer                          : false #
+is_opencv_visual                        : false # Obstalce Image Display
+is_static_env                           : false  #（默认值：true） - 如果环境包含动态障碍物，则设置为 false。
+is_pub_boundary                         : false # （默认值：false） - 设置为 true 可将自定义导航边界发送到开发环境中的本地计划程序。
+is_debug_output                         : true  #false
+is_attempt_autoswitch                   : true  # 设置为 false 可关闭从不可尝试的导航（对于已知环境）到可尝试的导航（对于未知环境）的自动切换。
+world_frame                             : map
+//-----------------------------------------------------------------------------------------------------------------------------------------

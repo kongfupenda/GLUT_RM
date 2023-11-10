@@ -1,0 +1,26 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/opt/ros/noetic/include/**",
+        "/home/pangyuhui/autonomous_exploration_development_environment/src/velodyne_simulator/velodyne_gazebo_plugins/include/**",
+        "/home/pangyuhui/autonomous_exploration_development_environment/src/waypoint_rviz_plugin/include/**",
+        "/home/pangyuhui/autonomous_exploration_development_environment/src/far_planner/src/far_planner/include/**",
+        "/home/pangyuhui/autonomous_exploration_development_environment/devel/include/**",
+        "/home/pangyuhui/autonomous_exploration_development_environment/src/far_planner/src/goalpoint_rviz_plugin/include/**",
+        "/home/pangyuhui/autonomous_exploration_development_environment/src/local_planner/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
